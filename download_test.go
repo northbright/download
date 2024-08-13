@@ -31,14 +31,14 @@ func ExampleNew() {
 		return
 	}
 
-	log.Printf("start downloading...\ndst: %v\nurl: %v", dst, url)
-
 	// Use a timeout to emulate that users stop the downloading.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
 	defer cancel()
 
 	bufSize := uint(64 * 1024)
 	interval := time.Millisecond * 100
+
+	log.Printf("start downloading...\ndst: %v\nurl: %v", dst, url)
 
 	// Call iocopy.Do to do the download task.
 	iocopy.Do(
@@ -74,14 +74,17 @@ func ExampleNew() {
 		},
 	)
 
-	// Load the downloader from the saved state and resume downloading.
+	// Load downloader from the saved data.
 	d, err = download.Load(savedData)
 	if err != nil {
 		log.Printf("download.Load() error: %v", err)
 		return
 	}
+	log.Printf("load downloader from saved data successfully")
 
 	ctx = context.Background()
+
+	log.Printf("resume downloading...\ndst: %v\nurl: %v", dst, url)
 
 	// Call iocopy.Do to do the download task.
 	iocopy.Do(
