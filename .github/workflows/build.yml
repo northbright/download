@@ -19,7 +19,6 @@ jobs:
         - ubuntu-22.04
         - ubuntu-latest
         go:
-        - "1.17"
         - "1.22"
 
       fail-fast: false
