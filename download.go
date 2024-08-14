@@ -16,17 +16,17 @@ import (
 
 // Downloader implements [github.com/northbright/iocopy.Task].
 type Downloader struct {
-	Dst              string         `json:"dst"`
 	Url              string         `json:"url"`
+	Dst              string         `json:"dst"`
 	IsSizeKnown      bool           `json:"is_size_known"`
 	Size             uint64         `json:"size,string"`
 	IsRangeSupported bool           `json:"is_range_supported"`
 	Downloaded       uint64         `json:"downloaded,string"`
-	f                *os.File       `json:"-"`
 	resp             *http.Response `json:"-"`
+	f                *os.File       `json:"-"`
 }
 
-func New(dst, url string) (*Downloader, error) {
+func New(url, dst string) (*Downloader, error) {
 	resp, isSizeKnown, size, isRangeSupported, err := httputil.GetResp(url)
 	if err != nil {
 		return nil, err
@@ -43,14 +43,14 @@ func New(dst, url string) (*Downloader, error) {
 	}
 
 	d := &Downloader{
-		Dst:              dst,
 		Url:              url,
+		Dst:              dst,
 		IsSizeKnown:      isSizeKnown,
 		Size:             size,
 		IsRangeSupported: isRangeSupported,
 		Downloaded:       0,
-		f:                f,
 		resp:             resp,
+		f:                f,
 	}
 
 	return d, nil
@@ -122,11 +122,11 @@ func (d *Downloader) Save() ([]byte, error) {
 	return json.MarshalIndent(d, "", "    ")
 }
 
-func Do(ctx context.Context, dst, url string, bufSize uint) error {
+func Do(ctx context.Context, url, dst string, bufSize uint) error {
 	var (
 		err = fmt.Errorf("unexpected behavior")
 	)
-	d, err := New(dst, url)
+	d, err := New(url, dst)
 	if err != nil {
 		return err
 	}
