@@ -57,7 +57,9 @@ func New(url, dst string) (*Downloader, error) {
 }
 
 func Load(data []byte) (*Downloader, error) {
-	var err error
+	var (
+		err error
+	)
 
 	d := &Downloader{}
 
@@ -70,28 +72,43 @@ func Load(data []byte) (*Downloader, error) {
 		return nil, err
 	}
 
-	d.f, err = os.OpenFile(d.Dst, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
+	// Get response and size.
+	if d.resp, d.IsSizeKnown, d.Size, d.IsRangeSupported, err = httputil.GetResp(d.Url); err != nil {
 		return nil, err
 	}
 
-	// Check if it can resume downloading.
-	if !d.IsRangeSupported {
-		d.resp, d.IsSizeKnown, d.Size, d.IsRangeSupported, err = httputil.GetResp(d.Url)
-		if err != nil {
-			return nil, err
-		}
-
-		// Reset number of bytes downloaded to 0.
-		d.Downloaded = 0
+	if d.Downloaded == 0 {
+		return d, nil
 	} else {
-		d.resp, _, err = httputil.GetRespOfRangeStart(d.Url, d.Downloaded)
-		if err != nil {
-			return nil, err
-		}
+		// d.Download > 0
+		if !d.IsRangeSupported {
+			// Reset number of bytes downloaded to 0.
+			d.Downloaded = 0
 
-		if _, err = d.f.Seek(int64(d.Downloaded), 0); err != nil {
-			return nil, err
+			if d.f, err = os.Create(d.Dst); err != nil {
+				return nil, err
+			}
+
+			return d, nil
+		} else {
+			// Range is supported.
+			// Close d.resp.Body()
+			d.resp.Body.Close()
+
+			// Get new response by range.
+			resp, _, err := httputil.GetRespOfRangeStart(d.Url, d.Downloaded)
+			if err != nil {
+				return nil, err
+			}
+			d.resp = resp
+
+			if d.f, err = os.OpenFile(d.Dst, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+				return nil, err
+			}
+
+			if _, err = d.f.Seek(int64(d.Downloaded), 0); err != nil {
+				return nil, err
+			}
 		}
 	}
 
