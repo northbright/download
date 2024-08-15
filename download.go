@@ -167,3 +167,6 @@ func Do(ctx context.Context, url, dst string, options ...iocopy.Option) error {
 	)
 	return err
 }
+
+// *Downloader implements task.Task interface.
+var _ task.Task = (*Downloader)(nil)
