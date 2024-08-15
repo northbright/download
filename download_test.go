@@ -42,7 +42,7 @@ func ExampleNew() {
 	task.Do(
 		// Context.
 		ctx,
-		// iocopy.Task. download.Downloader implements iocopy.Task interface.
+		// task.Task. download.Downloader implements task.Task interface.
 		d,
 		// On bytes written.
 		func(isTotalKnown bool, total, copied, written uint64, percent float32) {
@@ -88,7 +88,7 @@ func ExampleNew() {
 	task.Do(
 		// Context.
 		ctx,
-		// iocopy.Task. download.Downloader implements iocopy.Task interface.
+		// task.Task. download.Downloader implements task.Task interface.
 		d,
 		// On bytes written.
 		func(isTotalKnown bool, total, copied, written uint64, percent float32) {
