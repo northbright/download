@@ -11,6 +11,7 @@ import (
 
 	"github.com/northbright/httputil"
 	"github.com/northbright/iocopy"
+	"github.com/northbright/iocopy/task"
 	"github.com/northbright/pathelper"
 )
 
@@ -139,7 +140,7 @@ func (d *Downloader) Save() ([]byte, error) {
 	return json.MarshalIndent(d, "", "    ")
 }
 
-func Do(ctx context.Context, url, dst string, bufSize uint) error {
+func Do(ctx context.Context, url, dst string, options ...iocopy.Option) error {
 	var (
 		err = fmt.Errorf("unexpected behavior")
 	)
@@ -148,15 +149,9 @@ func Do(ctx context.Context, url, dst string, bufSize uint) error {
 		return err
 	}
 
-	if bufSize == 0 {
-		bufSize = iocopy.DefaultBufSize
-	}
-
-	iocopy.Do(
+	task.Do(
 		ctx,
 		d,
-		bufSize,
-		iocopy.DefaultInterval,
 		func(isTotalKnown bool, total, copied, written uint64, percent float32) {
 		},
 		func(isTotalKnown bool, total, copied, written uint64, percent float32, cause error) {
@@ -168,6 +163,7 @@ func Do(ctx context.Context, url, dst string, bufSize uint) error {
 		func(e error) {
 			err = e
 		},
+		options...,
 	)
 	return err
 }
