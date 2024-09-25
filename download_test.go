@@ -81,7 +81,7 @@ func ExampleDownload() {
 		log.Printf("download.Download() OK, %v bytes downloaded", n)
 	}
 
-	log.Printf("download.Download() starts again to resume downloading...\nurl: %v\ndst: %v", url, dst)
+	log.Printf("download.Download() starts again to resume downloading...\nurl: %v\ndst: %v\ndownloaded: %v", url, dst, n)
 	// Resume the download by set downloaded to n.
 	n2, err := download.Download(
 		// Context.
