@@ -21,12 +21,14 @@ import (
 // downloaded: number of bytes downloaded previously. It's used to resume previous download.
 // options: [progress.Option] used to report progress.
 func Download(ctx context.Context, url, dst string, downloaded int64, options ...progress.Option) (n int64, err error) {
+	// Get info of remote URL.
 	resp, sizeIsKnown, size, rangeIsSupported, err := httputil.GetResp(url)
 	if err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close()
 
+	// Create parent dir of dst if it does not exist.
 	dir := path.Dir(dst)
 	if err := pathelper.CreateDirIfNotExists(dir, 0755); err != nil {
 		return 0, err
@@ -34,6 +36,7 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 
 	var f *os.File
 
+	// Check if downloaded > 0.
 	if downloaded > 0 {
 		if rangeIsSupported {
 			// Range is supported.
@@ -61,6 +64,7 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 			downloaded = 0
 		}
 	} else {
+		// Set downloaded to 0 if it's negative.
 		if downloaded < 0 {
 			downloaded = 0
 		}
