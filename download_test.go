@@ -36,11 +36,14 @@ func ExampleDownload() {
 	)
 
 	if err != nil {
-		log.Printf("download.Download() error: %v", err)
-		return
+		if err != context.Canceled && err != context.DeadlineExceeded {
+			log.Printf("download.Download() error: %v", err)
+			return
+		}
+		log.Printf("download.Download() stopped, cause: %v. %v bytes downloaded", err, n)
+	} else {
+		log.Printf("download.Download() OK, %v bytes downloaded", n)
 	}
-
-	log.Printf("download.Download() OK, %v bytes downloaded", n)
 
 	// Remove the files after test's done.
 	os.Remove(dst)
@@ -72,9 +75,9 @@ func ExampleDownload() {
 			return
 		}
 		log.Printf("download.Download() stopped, cause: %v. %v bytes downloaded", err, n)
+	} else {
+		log.Printf("download.Download() OK, %v bytes downloaded", n)
 	}
-
-	log.Printf("call download.Download again to resume the download, set downloaded to %v", n)
 
 	// Resume the download by set downloaded to n.
 	n2, err := download.Download(
@@ -98,10 +101,11 @@ func ExampleDownload() {
 			return
 		}
 		log.Printf("download.Download() stopped, cause: %v. %v bytes downloaded", err, n2)
-		return
+	} else {
+		log.Printf("download.Download() OK, %v bytes downloaded", n2)
 	}
 
-	log.Printf("download.Download() OK, %v bytes downloaded, total: %v bytes downloaded", n2, n+n2)
+	log.Printf("total %v bytes downloaded", n+n2)
 
 	// Remove the files after test's done.
 	os.Remove(dst)
