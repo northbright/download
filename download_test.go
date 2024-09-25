@@ -13,16 +13,15 @@ import (
 
 func ExampleDownload() {
 	// Example 1. Download a remote file with reporting progress.
+	log.Printf("\n============ Example 1 Begin ============")
+
 	url := "https://golang.google.cn/dl/go1.23.1.darwin-amd64.pkg"
 	dst := filepath.Join(os.TempDir(), "go1.23.1.darwin-amd64.pkg")
 
-	ctx := context.Background()
-
 	log.Printf("download.Download() starts...\nurl: %v\ndst: %v", url, dst)
-
 	n, err := download.Download(
 		// Context.
-		ctx,
+		context.Background(),
 		// URL to download.
 		url,
 		// Destination.
@@ -48,15 +47,18 @@ func ExampleDownload() {
 	// Remove the files after test's done.
 	os.Remove(dst)
 
+	log.Printf("\n------------ Example 1 End ------------")
+
 	// Example 2. Stop a download and resume it.
-	ctx2, cancel := context.WithTimeout(context.Background(), time.Millisecond*800)
+	log.Printf("\n============ Example 2 Begin ============")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*800)
 	defer cancel()
 
 	log.Printf("download.Download() starts...\nurl: %v\ndst: %v", url, dst)
-
 	n, err = download.Download(
 		// Context.
-		ctx2,
+		ctx,
 		// URL to download.
 		url,
 		// Destination.
@@ -79,6 +81,7 @@ func ExampleDownload() {
 		log.Printf("download.Download() OK, %v bytes downloaded", n)
 	}
 
+	log.Printf("download.Download() starts again to resume downloading...\nurl: %v\ndst: %v", url, dst)
 	// Resume the download by set downloaded to n.
 	n2, err := download.Download(
 		// Context.
@@ -109,6 +112,8 @@ func ExampleDownload() {
 
 	// Remove the files after test's done.
 	os.Remove(dst)
+
+	log.Printf("\n------------ Example 2 End ------------")
 
 	// Output:
 }
