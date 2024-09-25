@@ -56,6 +56,9 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 			if _, err = f.Seek(downloaded, 0); err != nil {
 				return 0, err
 			}
+		} else {
+			// Reset download to 0 if range is not supported.
+			downloaded = 0
 		}
 	} else {
 		// Create dst file.
