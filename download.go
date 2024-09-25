@@ -61,6 +61,10 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 			downloaded = 0
 		}
 	} else {
+		if downloaded < 0 {
+			downloaded = 0
+		}
+
 		// Create dst file.
 		if f, err = os.Create(dst); err != nil {
 			return 0, err
