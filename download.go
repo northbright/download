@@ -32,11 +32,7 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 		return 0, err
 	}
 
-	f, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer f.Close()
+	var f *os.File
 
 	if downloaded > 0 {
 		if rangeIsSupported {
@@ -50,19 +46,23 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 				return 0, err
 			}
 
-			// Close dst file.
-			f.Close()
-
-			// Reopen dst file to with O_APPEND flag.
+			// Open dst file to with O_APPEND flag.
 			if f, err = os.OpenFile(dst, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
 				return 0, err
 			}
+			defer f.Close()
 
 			// Set offset for dst file.
 			if _, err = f.Seek(downloaded, 0); err != nil {
 				return 0, err
 			}
 		}
+	} else {
+		// Create dst file.
+		if f, err = os.Create(dst); err != nil {
+			return 0, err
+		}
+		defer f.Close()
 	}
 
 	// Check if callers need to report progress during IO copy.
