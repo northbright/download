@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"time"
 
 	"github.com/northbright/httputil"
 	"github.com/northbright/iocopy"
@@ -13,14 +14,49 @@ import (
 	"github.com/northbright/pathelper"
 )
 
-// Download downloads content of remote URL to local file.
+type downloader struct {
+	downloaded int64
+	fn         OnDownloadFunc
+	interval   time.Duration
+}
+
+// Option sets optional parameters to report download progress.
+type Option func(dl *downloader)
+
+// OnDownloadFunc is the callback function when bytes are copied successfully.
+// See [progress.OnWrittenFunc].
+type OnDownloadFunc progress.OnWrittenFunc
+
+// Downloaded returns an option to set the number of bytes downloaded previously.
+// It's used to calculate the percent of downloading.
+func Downloaded(downloaded int64) Option {
+	return func(dl *downloader) {
+		dl.downloaded = downloaded
+	}
+}
+
+// OnDownload returns an option to set callback to report progress.
+func OnDownload(fn OnDownloadFunc) Option {
+	return func(dl *downloader) {
+		dl.fn = fn
+	}
+}
+
+// OnDownloadInterval returns an option to set interval of the callback.
+func OnDownloadInterval(d time.Duration) Option {
+	return func(dl *downloader) {
+		dl.interval = d
+	}
+}
+
+// DownloadBuffer downloads content of remote URL to local file.
 // It returns the number of bytes downloaded.
 // ctx: [context.Context].
 // url: remote URL.
 // dst: local file.
-// downloaded: number of bytes downloaded previously. It's used to resume previous download.
-// options: [progress.Option] used to report progress.
-func Download(ctx context.Context, url, dst string, downloaded int64, options ...progress.Option) (n int64, err error) {
+// buf: buffer used to download.
+// options: [Option] used to report progress.
+func DownloadBuffer(ctx context.Context, url, dst string, buf []byte, options ...Option) (n int64, err error) {
 	// Get info of remote URL.
 	resp, sizeIsKnown, size, rangeIsSupported, err := httputil.GetResp(url)
 	if err != nil {
@@ -34,17 +70,23 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 		return 0, err
 	}
 
+	// Set optional parameters.
+	dl := &downloader{}
+	for _, option := range options {
+		option(dl)
+	}
+
 	var f *os.File
 
 	// Check if downloaded > 0.
-	if downloaded > 0 {
+	if dl.downloaded > 0 {
 		if rangeIsSupported {
 			// Range is supported.
 			// Close d.resp.Body()
 			resp.Body.Close()
 
 			// Get new response by range.
-			resp, _, err = httputil.GetRespOfRangeStart(url, downloaded)
+			resp, _, err = httputil.GetRespOfRangeStart(url, dl.downloaded)
 			if err != nil {
 				return 0, err
 			}
@@ -56,17 +98,17 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 			defer f.Close()
 
 			// Set offset for dst file.
-			if _, err = f.Seek(downloaded, 0); err != nil {
+			if _, err = f.Seek(dl.downloaded, 0); err != nil {
 				return 0, err
 			}
 		} else {
 			// Reset download to 0 if range is not supported.
-			downloaded = 0
+			dl.downloaded = 0
 		}
 	} else {
 		// Set downloaded to 0 if it's negative.
-		if downloaded < 0 {
-			downloaded = 0
+		if dl.downloaded < 0 {
+			dl.downloaded = 0
 		}
 
 		// Create dst file.
@@ -76,8 +118,10 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 		defer f.Close()
 	}
 
+	var writer io.Writer = f
+
 	// Check if callers need to report progress during IO copy.
-	if len(options) > 0 {
+	if dl.fn != nil {
 		// Pass -1 as size to progress.New() when total size is unknown.
 		if !sizeIsKnown {
 			size = -1
@@ -86,14 +130,16 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 		p := progress.New(
 			// Total size.
 			size,
+			// OnDownloadFunc
+			progress.OnWrittenFunc(dl.fn),
 			// Number of bytes copied previously.
-			downloaded,
-			// Options: OnWrittenFunc, Interval.
-			options...,
+			progress.Prev(dl.downloaded),
+			// Interval to report progress.
+			progress.Interval(dl.interval),
 		)
 
 		// Create a multiple writen and dupllicates writes to p.
-		mw := io.MultiWriter(f, p)
+		writer = io.MultiWriter(f, p)
 
 		// Create a channel.
 		// Send an empty struct to it to make progress goroutine exit.
@@ -104,8 +150,22 @@ func Download(ctx context.Context, url, dst string, downloaded int64, options ..
 
 		// Starts a new goroutine to report progress until ctx.Done() and chExit receive an empty struct.
 		p.Start(ctx, chExit)
-		return iocopy.Copy(ctx, mw, resp.Body)
-	} else {
-		return iocopy.Copy(ctx, f, resp.Body)
 	}
+
+	if buf != nil && len(buf) != 0 {
+		return iocopy.CopyBuffer(ctx, writer, resp.Body, buf)
+
+	} else {
+		return iocopy.Copy(ctx, writer, resp.Body)
+	}
+}
+
+// Download downloads content of remote URL to local file.
+// It returns the number of bytes downloaded.
+// ctx: [context.Context].
+// url: remote URL.
+// dst: local file.
+// options: [Option] used to report progress.
+func Download(ctx context.Context, url, dst string, options ...Option) (n int64, err error) {
+	return DownloadBuffer(ctx, url, dst, nil, options...)
 }

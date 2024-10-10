@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/northbright/download"
-	"github.com/northbright/iocopy/progress"
 )
 
 func ExampleDownload() {
@@ -26,10 +25,8 @@ func ExampleDownload() {
 		url,
 		// Destination.
 		dst,
-		// Number of bytes downloaded previously.
-		0,
-		// OnWrittenFunc to report progress.
-		progress.OnWritten(func(total, prev, current int64, percent float32) {
+		// Option to set OnDownloadFunc to report progress.
+		download.OnDownload(func(total, prev, current int64, percent float32) {
 			log.Printf("%v / %v(%.2f%%) downloaded", prev+current, total, percent)
 		}),
 	)
@@ -63,10 +60,8 @@ func ExampleDownload() {
 		url,
 		// Destination.
 		dst,
-		// Number of bytes downloaded previously.
-		0,
-		// OnWrittenFunc to report progress.
-		progress.OnWritten(func(total, prev, current int64, percent float32) {
+		// Option to set OnDownloadFunc to report progress.
+		download.OnDownload(func(total, prev, current int64, percent float32) {
 			log.Printf("%v / %v(%.2f%%) downloaded", prev+current, total, percent)
 		}),
 	)
@@ -90,10 +85,10 @@ func ExampleDownload() {
 		url,
 		// Destination.
 		dst,
-		// Number of bytes downloaded previously.
-		n,
-		// OnWrittenFunc to report progress.
-		progress.OnWritten(func(total, prev, current int64, percent float32) {
+		// Option to set number of bytes downloaded previously.
+		download.Downloaded(n),
+		// Option to set OnDownloadFunc to report progress.
+		download.OnDownload(func(total, prev, current int64, percent float32) {
 			log.Printf("%v / %v(%.2f%%) downloaded", prev+current, total, percent)
 		}),
 	)
