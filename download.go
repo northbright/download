@@ -77,19 +77,20 @@ func DownloadBuffer(ctx context.Context, url, dst string, buf []byte, options ..
 	}
 
 	var f *os.File
+	var reader io.Reader = resp.Body
 
 	// Check if downloaded > 0.
 	if dl.downloaded > 0 {
 		if rangeIsSupported {
-			// Range is supported.
-			// Close d.resp.Body()
-			resp.Body.Close()
-
 			// Get new response by range.
-			resp, _, err = httputil.GetRespOfRangeStart(url, dl.downloaded)
+			resp2, _, err := httputil.GetRespOfRangeStart(url, dl.downloaded)
 			if err != nil {
 				return 0, err
 			}
+			defer resp2.Body.Close()
+
+			// Update reader.
+			reader = resp2.Body
 
 			// Open dst file to with O_APPEND flag.
 			if f, err = os.OpenFile(dst, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
@@ -153,10 +154,10 @@ func DownloadBuffer(ctx context.Context, url, dst string, buf []byte, options ..
 	}
 
 	if buf != nil && len(buf) != 0 {
-		return iocopy.CopyBuffer(ctx, writer, resp.Body, buf)
+		return iocopy.CopyBuffer(ctx, writer, reader, buf)
 
 	} else {
-		return iocopy.Copy(ctx, writer, resp.Body)
+		return iocopy.Copy(ctx, writer, reader)
 	}
 }
 
