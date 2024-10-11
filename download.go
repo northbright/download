@@ -23,10 +23,6 @@ type downloader struct {
 // Option sets optional parameters to report download progress.
 type Option func(dl *downloader)
 
-// OnDownloadFunc is the callback function when bytes are copied successfully.
-// See [progress.OnWrittenFunc].
-type OnDownloadFunc progress.OnWrittenFunc
-
 // Downloaded returns an option to set the number of bytes downloaded previously.
 // It's used to calculate the percent of downloading.
 func Downloaded(downloaded int64) Option {
@@ -34,6 +30,10 @@ func Downloaded(downloaded int64) Option {
 		dl.downloaded = downloaded
 	}
 }
+
+// OnDownloadFunc is the callback function when bytes are copied successfully.
+// See [progress.OnWrittenFunc].
+type OnDownloadFunc progress.OnWrittenFunc
 
 // OnDownload returns an option to set callback to report progress.
 func OnDownload(fn OnDownloadFunc) Option {
@@ -139,7 +139,7 @@ func DownloadBuffer(ctx context.Context, url, dst string, buf []byte, options ..
 			progress.Interval(dl.interval),
 		)
 
-		// Create a multiple writen and dupllicates writes to p.
+		// Create a multiple writer and dupllicates writes to p.
 		writer = io.MultiWriter(f, p)
 
 		// Create a channel.
