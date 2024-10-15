@@ -58,7 +58,7 @@ func OnDownloadInterval(d time.Duration) Option {
 // options: [Option] used to report progress.
 func DownloadBuffer(ctx context.Context, url, dst string, buf []byte, options ...Option) (n int64, err error) {
 	// Get info of remote URL.
-	resp, sizeIsKnown, size, rangeIsSupported, err := httputil.GetResp(url)
+	resp, size, rangeIsSupported, err := httputil.GetResp(url)
 	if err != nil {
 		return 0, err
 	}
@@ -123,10 +123,6 @@ func DownloadBuffer(ctx context.Context, url, dst string, buf []byte, options ..
 
 	// Check if callers need to report progress during IO copy.
 	if dl.fn != nil {
-		// Pass -1 as size to progress.New() when total size is unknown.
-		if !sizeIsKnown {
-			size = -1
-		}
 		// Create a progress.
 		p := progress.New(
 			// Total size.
