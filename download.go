@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/northbright/httputil"
 	"github.com/northbright/iocopy"
@@ -37,7 +37,7 @@ func DownloadBufferWithProgress(
 	defer resp.Body.Close()
 
 	// Create parent dir of dst if it does not exist.
-	dir := path.Dir(dst)
+	dir := filepath.Dir(dst)
 	if err := pathelper.CreateDirIfNotExists(dir, 0755); err != nil {
 		return 0, err
 	}
