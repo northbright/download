@@ -28,7 +28,7 @@ func DownloadBufferWithProgress(
 	dst string,
 	buf []byte,
 	downloaded int64,
-	fn iocopy.OnWrittenFunc) (n int64, err error) {
+	fn func(total, prev, current int64, percent float32)) (n int64, err error) {
 	// Get info of remote URL.
 	resp, size, rangeIsSupported, err := httputil.GetResp(url)
 	if err != nil {
@@ -105,6 +105,6 @@ func DownloadWithProgress(
 	url string,
 	dst string,
 	downloaded int64,
-	fn iocopy.OnWrittenFunc) (n int64, err error) {
+	fn func(total, prev, current int64, percent float32)) (n int64, err error) {
 	return DownloadBufferWithProgress(ctx, url, dst, nil, downloaded, fn)
 }

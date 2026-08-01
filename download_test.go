@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/northbright/download"
-	"github.com/northbright/iocopy"
 )
 
 func ExampleDownloadBufferWithProgress() {
@@ -34,9 +33,9 @@ func ExampleDownloadBufferWithProgress() {
 		// Number of bytes downloaded previously.
 		0,
 		// Callback to report progress.
-		iocopy.OnWrittenFunc(func(total, prev, current int64, percent float32) {
+		func(total, prev, current int64, percent float32) {
 			log.Printf("%v / %v(%.2f%%) downloaded", prev+current, total, percent)
-		}),
+		},
 	)
 
 	if err != nil {
@@ -64,9 +63,9 @@ func ExampleDownloadBufferWithProgress() {
 		// Number of bytes downloaded.
 		n,
 		// Callback to report progress.
-		iocopy.OnWrittenFunc(func(total, prev, current int64, percent float32) {
+		func(total, prev, current int64, percent float32) {
 			log.Printf("%v / %v(%.2f%%) downloaded", prev+current, total, percent)
-		}),
+		},
 	)
 
 	if err != nil {
