@@ -18,6 +18,9 @@ func ExampleDownloadBufferWithProgress() {
 	c := &http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
 
+	// Set User-Agent.
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.76")
+
 	dst := filepath.Join(os.TempDir(), "go1.23.1.darwin-amd64.pkg")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*800)
