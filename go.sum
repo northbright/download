@@ -1,5 +1,5 @@
-github.com/northbright/httputil v1.3.1 h1:s0IyFrLr0nD0SiqEBRBzkQutMQ+MJGyhm84QHp++KOw=
-github.com/northbright/httputil v1.3.1/go.mod h1:ANMNxMzrd1ffD1SDsxtD1COSM2Nyq2Y6iqis8bqdDoU=
+github.com/northbright/httputil v1.3.2 h1:d+dWwOmscIP5F0dMWHjHbdfX8xAy6QuEKVdBgLQ47l8=
+github.com/northbright/httputil v1.3.2/go.mod h1:ANMNxMzrd1ffD1SDsxtD1COSM2Nyq2Y6iqis8bqdDoU=
 github.com/northbright/iocopy v1.16.2 h1:JisdAzjIyXlE+Ecnf/O8WYc5xSHBB57H0ZYFNq45ChE=
 github.com/northbright/iocopy v1.16.2/go.mod h1:ThJoXNk/BRj3fXf7oYXWNRq83uzTVYIgPbMGTGSmyHA=
 github.com/northbright/pathelper v1.0.8 h1:1YPXVUpIH8zBlzfd7h/Vtsktf3xrUbrKpYgBAbDU6xc=
