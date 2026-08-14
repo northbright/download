@@ -3,6 +3,7 @@ package download
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/northbright/pathelper"
 )
 
-// DownloadBufferWithProgress downloads content of remote URL to local file and returns the number of bytes downloaded.
+// DownloadBufferWithProgress does an HTTP request to download the content to a local file and returns the number of bytes downloaded.
 // It accepts [context.Context] to make download cancalable.
 // It also accepts callback function on bytes written to report progress.
 // downloaded: number of bytes downloaded previously.
@@ -24,13 +25,14 @@ import (
 // fn: callback on bytes written.
 func DownloadBufferWithProgress(
 	ctx context.Context,
-	url string,
+	c *http.Client,
+	req *http.Request,
 	dst string,
 	buf []byte,
 	downloaded int64,
 	fn func(total, prev, current int64, percent float32)) (n int64, err error) {
-	// Get info of remote URL.
-	resp, size, rangeIsSupported, err := httputil.GetResp(url)
+	// Get total size and check if accept ranges.
+	resp, size, acceptRanges, err := httputil.DoRequest(c, req)
 	if err != nil {
 		return 0, err
 	}
@@ -47,9 +49,9 @@ func DownloadBufferWithProgress(
 
 	// Check if downloaded > 0.
 	if downloaded > 0 {
-		if rangeIsSupported {
+		if acceptRanges {
 			// Get new response by range.
-			resp2, _, err := httputil.GetRespOfRangeStart(url, downloaded)
+			resp2, _, err := httputil.DoRequestRange(c, req, downloaded, 0)
 			if err != nil {
 				return 0, err
 			}
@@ -88,23 +90,24 @@ func DownloadBufferWithProgress(
 	return iocopy.CopyBufferWithProgress(ctx, f, reader, buf, size, downloaded, fn)
 }
 
-// Download downloads content of remote URL to local file and returns the number of bytes downloaded.
+// Download does an HTTP request to download the content to a local file and returns the number of bytes downloaded.
 // It accepts [context.Context] to make download cancalable.
-func Download(ctx context.Context, url, dst string) (n int64, err error) {
-	return DownloadBufferWithProgress(ctx, url, dst, nil, 0, nil)
+func Download(ctx context.Context, c *http.Client, req *http.Request, dst string) (n int64, err error) {
+	return DownloadBufferWithProgress(ctx, c, req, dst, nil, 0, nil)
 }
 
 // DownloadBuffer is the buffered version of [Download].
-func DownloadBuffer(ctx context.Context, url, dst string, buf []byte) (n int64, err error) {
-	return DownloadBufferWithProgress(ctx, url, dst, buf, 0, nil)
+func DownloadBuffer(ctx context.Context, c *http.Client, req *http.Request, dst string, buf []byte) (n int64, err error) {
+	return DownloadBufferWithProgress(ctx, c, req, dst, buf, 0, nil)
 }
 
 // DownloadWithProgress is the non-buffered version of [DownloadBufferWithProgress].
 func DownloadWithProgress(
 	ctx context.Context,
-	url string,
+	c *http.Client,
+	req *http.Request,
 	dst string,
 	downloaded int64,
 	fn func(total, prev, current int64, percent float32)) (n int64, err error) {
-	return DownloadBufferWithProgress(ctx, url, dst, nil, downloaded, fn)
+	return DownloadBufferWithProgress(ctx, c, req, dst, nil, downloaded, fn)
 }

@@ -2,7 +2,9 @@ package download_test
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -12,6 +14,10 @@ import (
 
 func ExampleDownloadBufferWithProgress() {
 	url := "https://golang.google.cn/dl/go1.23.1.darwin-amd64.pkg"
+
+	c := &http.Client{}
+	req, _ := http.NewRequest("GET", url, nil)
+
 	dst := filepath.Join(os.TempDir(), "go1.23.1.darwin-amd64.pkg")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*800)
@@ -22,13 +28,10 @@ func ExampleDownloadBufferWithProgress() {
 	buf := make([]byte, 1024*640)
 
 	n, err := download.DownloadBufferWithProgress(
-		// Context.
 		ctx,
-		// URL to download.
-		url,
-		// Destination.
+		c,
+		req,
 		dst,
-		// Buffer.
 		buf,
 		// Number of bytes downloaded previously.
 		0,
@@ -50,15 +53,13 @@ func ExampleDownloadBufferWithProgress() {
 	}
 
 	log.Printf("download.DownloadBufferWithProgress() starts again to resume downloading...\nurl: %v\ndst: %v\ndownloaded: %v", url, dst, n)
+
 	// Resume the download by setting downloaded to n.
 	n2, err := download.DownloadBufferWithProgress(
-		// Context.
 		context.Background(),
-		// URL to download.
-		url,
-		// Destination.
+		c,
+		req,
 		dst,
-		// Buffer.
 		buf,
 		// Number of bytes downloaded.
 		n,
@@ -79,9 +80,11 @@ func ExampleDownloadBufferWithProgress() {
 	}
 
 	log.Printf("total %v bytes downloaded", n+n2)
+	fmt.Printf("download successfully, total %v bytes downloaded", n+n2)
 
 	// Remove the files after test's done.
 	os.Remove(dst)
 
 	// Output:
+	// download successfully, total 75917313 bytes downloaded
 }
