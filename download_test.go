@@ -52,6 +52,7 @@ func ExampleDownloadBufferWithProgress() {
 		log.Printf("download.DownloadBufferWithProgress() stopped, cause: %v. %v bytes downloaded", err, n)
 	} else {
 		log.Printf("download.DownloadBufferWithProgress() OK, %v bytes downloaded", n)
+		fmt.Printf("download successfully, total %v bytes downloaded", n)
 		return
 	}
 
